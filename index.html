@@ -1,0 +1,483 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10101c">
+
+<title>My TikTok Search Hub</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #10101c;
+  color: white;
+  padding: 18px;
+}
+
+.container {
+  max-width: 650px;
+  margin: auto;
+}
+
+header {
+  text-align: center;
+  padding: 25px 10px;
+}
+
+header h1 {
+  font-size: 27px;
+  color: #25f4ee;
+}
+
+header p {
+  color: #aaa;
+  margin-top: 9px;
+  font-size: 14px;
+}
+
+.card {
+  background: #1d1d2c;
+  border-radius: 15px;
+  padding: 18px;
+  margin-bottom: 17px;
+}
+
+h2 {
+  font-size: 17px;
+  margin-bottom: 14px;
+  color: #25f4ee;
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+}
+
+input {
+  min-width: 0;
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #444;
+  border-radius: 9px;
+  background: #29293b;
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  border-radius: 9px;
+  padding: 12px 15px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.search-btn {
+  background: #fe2c55;
+  color: white;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.chip {
+  background: #303044;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 30px;
+  padding: 10px 13px;
+}
+
+.chip:hover {
+  background: #fe2c55;
+}
+
+.chip.selected {
+  background: #075d60;
+  border-color: #25f4ee;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #363647;
+  gap: 10px;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.small-btn {
+  background: #343449;
+  color: white;
+  padding: 8px 12px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  color: #ddd;
+  gap: 10px;
+}
+
+.history-item button {
+  background: #303044;
+  color: white;
+}
+
+.info {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+footer {
+  text-align: center;
+  color: #888;
+  padding: 20px 5px;
+  font-size: 12px;
+}
+
+@media(max-width: 420px) {
+  .search-box {
+    flex-direction: column;
+  }
+
+  .search-btn {
+    padding: 14px;
+  }
+
+  header h1 {
+    font-size: 23px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+  <h1>My TikTok Search Hub</h1>
+  <p>Your personalised entertainment and dance discovery dashboard</p>
+</header>
+
+<section class="card">
+  <h2>Search TikTok</h2>
+
+  <div class="search-box">
+    <input
+      type="search"
+      id="searchInput"
+      placeholder="Enter your search term..."
+      autocomplete="off"
+    >
+    <button class="search-btn" onclick="searchTikTok()">
+      SEARCH
+    </button>
+  </div>
+
+  <p class="info" style="margin-top:12px">
+    Enter a topic, artist, dance style or entertainment trend.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Your Interest Categories</h2>
+  <div class="chips" id="categories"></div>
+</section>
+
+<section class="card">
+  <h2>Recommended Searches</h2>
+  <div id="recommendations"></div>
+</section>
+
+<section class="card">
+  <h2>Your Search History</h2>
+  <div id="history"></div>
+  <button class="small-btn" onclick="clearHistory()">
+    Clear History
+  </button>
+</section>
+
+<section class="card">
+  <h2>Personalisation Settings</h2>
+  <p class="info">
+    Your searches and selected interests are saved locally
+    on this device. Frequently selected categories receive
+    higher priority in your recommendations.
+  </p>
+  <br>
+  <button class="small-btn" onclick="resetPreferences()">
+    Reset Preferences
+  </button>
+</section>
+
+<footer>
+  Personalised TikTok Search Hub<br>
+  Powered by HTML, CSS and JavaScript
+</footer>
+
+</div>
+
+<script>
+
+// AVAILABLE INTERESTS
+const interests = [
+  "Entertainment",
+  "African Dance",
+  "Kenyan Dance",
+  "Kurombosa Dance",
+  "African Music",
+  "Kenyan Music",
+  "Dance Tutorials",
+  "African Choreography",
+  "Cultural Performances",
+  "Trending Dance Challenges",
+  "Afrobeats",
+  "East African Entertainment"
+];
+
+// LOCAL STORAGE
+let preferences = JSON.parse(
+  localStorage.getItem("myPreferences") || "{}"
+);
+
+let history = JSON.parse(
+  localStorage.getItem("myHistory") || "[]"
+);
+
+// BLOCK UNSUITABLE SEARCH TERMS
+const blockedTerms = [
+  "twerk",
+  "twerking",
+  "porn",
+  "nude",
+  "naked",
+  "sexual"
+];
+
+function saveData() {
+  localStorage.setItem(
+    "myPreferences",
+    JSON.stringify(preferences)
+  );
+
+  localStorage.setItem(
+    "myHistory",
+    JSON.stringify(history)
+  );
+}
+
+// DISPLAY INTEREST CATEGORIES
+function renderCategories() {
+  const box = document.getElementById("categories");
+
+  box.innerHTML = "";
+
+  interests.forEach(topic => {
+    const btn = document.createElement("button");
+
+    btn.className = "chip" +
+      (preferences[topic] ? " selected" : "");
+
+    btn.textContent = topic;
+
+    btn.onclick = () => {
+      preferences[topic] = !preferences[topic];
+      saveData();
+      renderCategories();
+      renderRecommendations();
+    };
+
+    box.appendChild(btn);
+  });
+}
+
+// PERSONALISE RECOMMENDATIONS
+function renderRecommendations() {
+  const box = document.getElementById("recommendations");
+
+  let sorted = [...interests].sort((a, b) =>
+    (Number(preferences[b] || 0)) -
+    (Number(preferences[a] || 0))
+  );
+
+  box.innerHTML = "";
+
+  sorted.slice(0, 7).forEach(topic => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    const name = document.createElement("span");
+    name.textContent = topic;
+
+    const btn = document.createElement("button");
+    btn.className = "small-btn";
+    btn.textContent = "Explore";
+
+    btn.onclick = () => searchTopic(topic);
+
+    div.append(name, btn);
+    box.appendChild(div);
+  });
+}
+
+// SAFETY CHECK
+function isAllowed(query) {
+  const words = query.toLowerCase();
+
+  return !blockedTerms.some(term =>
+    words.includes(term)
+  );
+}
+
+// SEARCH FUNCTION
+function searchTikTok() {
+  const input = document.getElementById("searchInput");
+
+  const query = input.value.trim();
+
+  if (!query) {
+    alert("Please enter a search term.");
+    return;
+  }
+
+  if (!isAllowed(query)) {
+    alert("Please choose a suitable dance, music or entertainment search.");
+    return;
+  }
+
+  performSearch(query);
+}
+
+// SEARCH CATEGORY
+function searchTopic(topic) {
+  document.getElementById("searchInput").value = topic;
+  performSearch(topic);
+}
+
+// PROCESS SEARCH
+function performSearch(query) {
+
+  if (!isAllowed(query)) {
+    alert("Please choose a suitable search term.");
+    return;
+  }
+
+  // Update interest score
+  const matched = interests.find(
+    item => item.toLowerCase() === query.toLowerCase()
+  );
+
+  if (matched) {
+    preferences[matched] =
+      (Number(preferences[matched]) || 0) + 1;
+  }
+
+  // Save search history
+  history = [
+    query,
+    ...history.filter(item => item !== query)
+  ].slice(0, 12);
+
+  saveData();
+
+  renderHistory();
+  renderRecommendations();
+  renderCategories();
+
+  // Open TikTok search
+  const url =
+    "https://www.tiktok.com/search?q=" +
+    encodeURIComponent(query);
+
+  window.open(url, "_blank");
+}
+
+// DISPLAY HISTORY
+function renderHistory() {
+  const box = document.getElementById("history");
+
+  box.innerHTML = "";
+
+  if (history.length === 0) {
+    box.textContent = "No searches yet.";
+    return;
+  }
+
+  history.forEach(term => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+
+    const label = document.createElement("span");
+    label.textContent = term;
+
+    const btn = document.createElement("button");
+    btn.textContent = "Search";
+
+    btn.onclick = () => searchTopic(term);
+
+    div.append(label, btn);
+    box.appendChild(div);
+  });
+}
+
+// CLEAR HISTORY
+function clearHistory() {
+  if (confirm("Clear your search history?")) {
+    history = [];
+    saveData();
+    renderHistory();
+  }
+}
+
+// RESET SETTINGS
+function resetPreferences() {
+  if (confirm("Reset all interests and search history?")) {
+    preferences = {};
+    history = [];
+
+    saveData();
+
+    renderCategories();
+    renderHistory();
+    renderRecommendations();
+  }
+}
+
+// ENTER KEY SEARCH
+document.getElementById("searchInput")
+  .addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      searchTikTok();
+    }
+  });
+
+// INITIALISE
+renderCategories();
+renderRecommendations();
+renderHistory();
+
+</script>
+
+</body>
+</html>
